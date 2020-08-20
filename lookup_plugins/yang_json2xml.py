@@ -201,8 +201,10 @@ class LookupModule(LookupBase):
         try:
             json2xml_exec.main()
             with open(xml_file_path, 'r+') as fp:
-                content = fp.read()
-
+                b_content = fp.read()
+                content = to_text(b_content, errors='surrogate_or_strict')
+        except UnicodeError as uni_error:
+            raise AnsibleError('Error while translating to text: %s' % str(uni_error))
         except SystemExit:
             pass
         finally:
@@ -225,7 +227,7 @@ class LookupModule(LookupBase):
             if not keep_tmp_files:
                 temp_dir = os.path.join(JSON2XML_DIR_PATH, plugin_instance)
                 shutil.rmtree(os.path.realpath(os.path.expanduser(temp_dir)), ignore_errors=True)
-        res.append(etree.tostring(root))
+        res.append(etree.tostring(root).decode('utf-8'))
 
         return res
 
